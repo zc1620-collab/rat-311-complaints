@@ -12,3 +12,34 @@ body, html {
     width: 100%;
     height: 100%;
 }
+
+#instruction-overlay {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.72);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-align: center;
+    z-index: 10;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+
+#instruction-overlay p {
+    margin: 0 0 4px;
+    font-size: 15px;
+    font-weight: 500;
+}
+
+#instruction-overlay span {
+    font-size: 12px;
+    opacity: 0.7;
+}
+
+#instruction-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
