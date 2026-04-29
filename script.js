@@ -165,7 +165,7 @@ map.on('load', () => {
         popup.remove();
     });
 
-    // ── Hover highlight layer ────────────────────────────────────────
+    // ── Hover highlight layer 
     map.addLayer({
         id: 'council-districts-hover',
         type: 'fill',

@@ -186,6 +186,7 @@ html, body {
     text-decoration: underline;
 }
 
+/*panel to search an address*/
 #address-panel {
     position: absolute;
     top: 50%;
