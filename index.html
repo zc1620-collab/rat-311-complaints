@@ -4,16 +4,52 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class 4 - GeoJSON Demo | Mapbox GL JS</title>
+    <title>The Rats Don't Run This City - Or Do They?</title>
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.css" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
+    <div id="title-screen">
+        <div id="title-card">
+            <p id="subtitle">New York City</p>
+            <h1>The Rats Don't Run This City - Or Do They?</h1>
+            <p id="description">
+                The Health Department receives approximately 40,000 rat complaints annually.
+                Explore which council districts are most affected and where reports are concentrated.
+            </p>
+            <div id="meta">
+                <span>Data: NYC Open Data</span>
+                <span>311 Service Requests, 2020–Present</span>
+            </div>
+            <button id="enter-btn" onclick="enterMap()">Explore the Map →</button>
+        </div>
+    </div>
     <div id="map"></div>
     <div id="instruction-overlay">
-        <p>Which council district has the most rat complaints?</p>
-        <span>Click to find out</span>
+        <p>Which council district the highest number of 311 rat complaints?</p>
+        <span>Click to find out!</span>
+    </div>
+    <div id="legend">
+        <h4>Number of rat related 311 service requests by council district - 2020 to present</h4>
+        <div class="legend-item"><span style="background: #f1eef6"></span> 1,025 – 3,500</div>
+        <div class="legend-item"><span style="background: #d7b5d8"></span> 3,500 – 6,000</div>
+        <div class="legend-item"><span style="background: #df65b0"></span> 6,000 – 9,000</div>
+        <div class="legend-item"><span style="background: #d22475"></span> 9,000 – 11,344</div>
+        <div class="legend-item"><span style="background: #7b0337"></span> 11,344+</div>
+    </div>
+    <div id="citation">
+        Data: NYC Open Data — 311 Service Requests from 2010 to Present. NYC Department of Information Technology and
+        Telecommunications.
+    </div>
+    <div id="address-panel">
+        <h3>Search by Address</h3>
+        <p>How many rat complaints were filed at a specific address in this district?</p>
+        <div id="search-row">
+            <input type="text" id="address-input" placeholder="e.g. 123 Main Street" />
+            <button id="search-btn" onclick="searchAddress()">Search</button>
+        </div>
+        <div id="search-result"></div>
     </div>
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js"></script>
     <script src="script.js"></script>

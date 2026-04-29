@@ -7,8 +7,16 @@ const map = new mapboxgl.Map({
     zoom: 10
 });
 
-const HIGHEST_DISTRICT_ID = 36;        
-const HIGHEST_DISTRICT_PROP = 'CounDist'; 
+const HIGHEST_DISTRICT_ID = 36;
+const HIGHEST_DISTRICT_PROP = 'CounDist';
+
+function enterMap() {
+    const titleScreen = document.getElementById('title-screen');
+    titleScreen.classList.add('fade-out');
+    setTimeout(() => {
+        titleScreen.style.display = 'none';
+    }, 600);
+}
 
 map.on('load', () => {
 
@@ -65,7 +73,7 @@ map.on('load', () => {
         },
         paint: {
             'circle-radius': 3,
-            'circle-color': '#ff0000',
+            'circle-color': '#5319af',
             'circle-opacity': 0.8
         }
     });
@@ -115,6 +123,8 @@ map.on('load', () => {
             const overlay = document.getElementById('instruction-overlay');
             if (overlay) overlay.classList.add('hidden');
 
+            map.setLayoutProperty('highest-district-highlight', 'visibility', 'none');
+
         } else {
             // Clicked a different district — nudge them toward the right one
             const overlay = document.getElementById('instruction-overlay');
@@ -132,4 +142,119 @@ map.on('load', () => {
     map.on('mouseleave', 'council-districts-fill', () => {
         map.getCanvas().style.cursor = '';
     });
+
+    // ── Hover popup ─────────────────────────────────────────────────
+    const popup = new mapboxgl.Popup({
+        closeButton: false,
+        closeOnClick: false
+    });
+
+    map.on('mousemove', 'council-districts-fill', (e) => {
+        const props = e.features[0].properties;
+
+        popup
+            .setLngLat(e.lngLat)
+            .setHTML(`
+            <strong>${props[HIGHEST_DISTRICT_PROP]}</strong><br>
+            Number of Rat Sighting 311 Complaints: ${props.NUMPOINTS.toLocaleString()}
+        `)
+            .addTo(map);
+    });
+
+    map.on('mouseleave', 'council-districts-fill', () => {
+        popup.remove();
+    });
+
+    // ── Hover highlight layer ────────────────────────────────────────
+    map.addLayer({
+        id: 'council-districts-hover',
+        type: 'fill',
+        source: 'rat-complaints-per-cd',
+        paint: {
+            'fill-color': '#ffffff',
+            'fill-opacity': 0.2
+        },
+        filter: ['==', ['get', HIGHEST_DISTRICT_PROP], '']  // empty to start — nothing highlighted
+    });
+
+    map.addLayer({
+        id: 'council-districts-hover-line',
+        type: 'line',
+        source: 'rat-complaints-per-cd',
+        paint: {
+            'line-color': '#ffffff',
+            'line-width': 2.5
+        },
+        filter: ['==', ['get', HIGHEST_DISTRICT_PROP], '']
+    });
+
+    let hoveredId = null;
+
+    map.on('mousemove', 'council-districts-fill', (e) => {
+        const props = e.features[0].properties;
+        const currentId = props[HIGHEST_DISTRICT_PROP];
+
+        if (currentId !== hoveredId) {
+            hoveredId = currentId;
+
+            map.setFilter('council-districts-hover',
+                ['==', ['get', HIGHEST_DISTRICT_PROP], hoveredId]
+            );
+
+            map.setFilter('council-districts-hover-line',
+                ['==', ['get', HIGHEST_DISTRICT_PROP], hoveredId]
+            );
+        }
+    });
+
+    map.once('moveend', () => {
+        map.setLayoutProperty('point-of-complaints', 'visibility', 'visible');
+        // Add this line:
+        document.getElementById('address-panel').classList.add('visible');
+    });
+});
+
+let pointsData = null;      // will hold the loaded GeoJSON once fetched
+
+// Load the points GeoJSON into memory so we can search it
+fetch('./point-complaints-highest-CD.json')
+    .then(r => r.json())
+    .then(data => { pointsData = data; });
+
+function searchAddress() {
+    const input = document.getElementById('address-input').value.trim().toLowerCase();
+    const resultDiv = document.getElementById('search-result');
+
+    if (!input) {
+        resultDiv.innerHTML = '<span class="none">Please enter an address.</span>';
+        return;
+    }
+
+    if (!pointsData) {
+        resultDiv.innerHTML = '<span class="none">Data not loaded yet — try again.</span>';
+        return;
+    }
+
+    // Filter features where Incident Address contains the search string
+    const matches = pointsData.features.filter(f => {
+        const addr = f.properties['Incident Address'];
+        return addr && addr.toLowerCase().includes(input);
+    });
+
+    if (matches.length === 0) {
+        resultDiv.innerHTML = `<span class="none">No complaints found for "${input}".</span>`;
+    } else {
+        // Get the actual matched address strings for display
+        const uniqueAddresses = [...new Set(matches.map(f => f.properties['Incident Address']))];
+        resultDiv.innerHTML = `
+            <span class="count">${matches.length}</span>
+            complaint${matches.length !== 1 ? 's' : ''} filed at:<br>
+            <strong>${uniqueAddresses.join('<br>')}</strong>
+        `;
+    }
+}
+
+// Allow pressing Enter to search
+document.getElementById('address-input').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') searchAddress();
 });

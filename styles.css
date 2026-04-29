@@ -1,18 +1,104 @@
-body, html {
+html, body {
     height: 100%;
     margin: 0;
     padding: 0;
+    position: relative;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 
+/*styling the title screen */
+#title-screen {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(10, 10, 20, 0.85);
+    backdrop-filter: blur(4px);
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.6s ease;
+}
+
+#title-screen.fade-out {
+    opacity: 0;
+}
+
+#title-card {
+    max-width: 560px;
+    text-align: center;
+    color: white;
+    padding: 0 24px;
+}
+
+#subtitle {
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.5);
+    margin: 0 0 12px;
+}
+
+#title-card h1 {
+    font-size: 52px;
+    font-weight: 700;
+    margin: 0 0 24px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+}
+
+#description {
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.75);
+    margin: 0 0 32px;
+}
+
+#meta {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 40px;
+}
+
+#enter-btn {
+    background: white;
+    color: black;
+    border: none;
+    padding: 14px 32px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+#enter-btn:hover {
+    background: #e0e0e0;
+}
+
+#enter-btn:active {
+    transform: scale(0.97);
+}
+
+/*map position*/
 #map {
     position: absolute;
     top: 0;
-    bottom: 0;
+    left: 0;
     width: 100%;
     height: 100%;
+    z-index: 1;
 }
 
+/* instructions at top of page*/
 #instruction-overlay {
     position: absolute;
     top: 20px;
@@ -42,4 +128,149 @@ body, html {
 #instruction-overlay.hidden {
     opacity: 0;
     pointer-events: none;
+}
+
+.mapboxgl-popup-content {
+    background: rgba(0, 0, 0, 0.75);
+    color: white;
+    padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    line-height: 1.6;
+    box-shadow: none;
+}
+
+.mapboxgl-popup-tip {
+    display: none;
+}
+
+/* map legend */
+#legend {
+    position: absolute;
+    bottom: 30px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.72);
+    color: white;
+    padding: 14px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    line-height: 1.8;
+    z-index: 10;
+}
+
+#legend h4 {
+    margin: 0 0 10px;
+    font-size: 13px;
+    font-weight: 600;
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+    padding-bottom: 8px;
+}
+
+#legend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#legend .legend-item span {
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    border-radius: 3px;
+    flex-shrink: 0;
+}
+
+/* citation */
+#citation a {
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: underline;
+}
+
+#address-panel {
+    position: absolute;
+    top: 50%;
+    right: -320px;                      /* hidden off-screen to start */
+    transform: translateY(-50%);
+    width: 280px;
+    background: rgba(0, 0, 0, 0.82);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 10;
+    transition: right 0.5s ease;
+}
+
+#address-panel.visible {
+    right: 16px;                        /* slides in */
+}
+
+#address-panel h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+#address-panel p {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin: 0 0 14px;
+    line-height: 1.5;
+}
+
+#search-row {
+    display: flex;
+    gap: 8px;
+}
+
+#address-input {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: none;
+    font-size: 13px;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    outline: none;
+}
+
+#address-input::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+#address-input:focus {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#search-btn {
+    padding: 8px 12px;
+    background: white;
+    color: black;
+    border: none;
+    border-radius: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+#search-btn:hover {
+    background: #e0e0e0;
+}
+
+#search-result {
+    margin-top: 14px;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 20px;
+}
+
+#search-result .count {
+    font-size: 28px;
+    font-weight: 700;
+    display: block;
+    margin-bottom: 4px;
+}
+
+#search-result .none {
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
 }
