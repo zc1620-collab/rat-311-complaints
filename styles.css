@@ -1,4 +1,5 @@
-html, body {
+html,
+body {
     height: 100%;
     margin: 0;
     padding: 0;
@@ -145,133 +146,67 @@ html, body {
 }
 
 /* map legend */
+
 #legend {
     position: absolute;
     bottom: 30px;
     right: 10px;
     background: rgba(0, 0, 0, 0.72);
     color: white;
-    padding: 14px 18px;
+    padding: 14px 16px;
     border-radius: 8px;
     font-size: 13px;
-    line-height: 1.8;
     z-index: 10;
+    width: fit-content;
 }
 
-#legend h4 {
-    margin: 0 0 10px;
-    font-size: 13px;
+#legend-title {
+    font-size: 12px;
     font-weight: 600;
-    border-bottom: 1px solid rgba(255,255,255,0.2);
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 10px;
     padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    max-width: 180px;
+    line-height: 1.4;
 }
 
-#legend .legend-item {
+.legend-item {
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 5px;
 }
 
-#legend .legend-item span {
-    display: inline-block;
+.swatch {
     width: 16px;
     height: 16px;
     border-radius: 3px;
+    display: inline-block;
     flex-shrink: 0;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    /* gives the light swatch visibility */
 }
 
-/* citation */
+.legend-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+    white-space: nowrap;
+}
+
+#citation {
+    position: absolute;
+    bottom: 30px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.72);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 11px;
+    z-index: 10;
+}
+
 #citation a {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: underline;
-}
-
-/*panel to search an address*/
-#address-panel {
-    position: absolute;
-    top: 50%;
-    right: -320px;                      /* hidden off-screen to start */
-    transform: translateY(-50%);
-    width: 280px;
-    background: rgba(0, 0, 0, 0.82);
-    color: white;
-    padding: 20px;
-    border-radius: 10px;
-    z-index: 10;
-    transition: right 0.5s ease;
-}
-
-#address-panel.visible {
-    right: 16px;                        /* slides in */
-}
-
-#address-panel h3 {
-    margin: 0 0 8px;
-    font-size: 15px;
-    font-weight: 600;
-}
-
-#address-panel p {
-    font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
-    margin: 0 0 14px;
-    line-height: 1.5;
-}
-
-#search-row {
-    display: flex;
-    gap: 8px;
-}
-
-#address-input {
-    flex: 1;
-    padding: 8px 10px;
-    border-radius: 5px;
-    border: none;
-    font-size: 13px;
-    background: rgba(255, 255, 255, 0.12);
-    color: white;
-    outline: none;
-}
-
-#address-input::placeholder {
-    color: rgba(255, 255, 255, 0.35);
-}
-
-#address-input:focus {
-    background: rgba(255, 255, 255, 0.2);
-}
-
-#search-btn {
-    padding: 8px 12px;
-    background: white;
-    color: black;
-    border: none;
-    border-radius: 5px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-}
-
-#search-btn:hover {
-    background: #e0e0e0;
-}
-
-#search-result {
-    margin-top: 14px;
-    font-size: 13px;
-    line-height: 1.6;
-    min-height: 20px;
-}
-
-#search-result .count {
-    font-size: 28px;
-    font-weight: 700;
-    display: block;
-    margin-bottom: 4px;
-}
-
-#search-result .none {
-    color: rgba(255, 255, 255, 0.5);
-    font-style: italic;
 }

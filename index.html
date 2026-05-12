@@ -26,30 +26,22 @@
         </div>
     </div>
     <div id="map"></div>
-    <div id="instruction-overlay">
-        <p>Which council district the highest number of 311 rat complaints?</p>
-        <span>Click to find out!</span>
-    </div>
     <div id="legend">
-        <h4>Number of rat related 311 service requests by council district - 2020 to present</h4>
-        <div class="legend-item"><span style="background: #f1eef6"></span> 1,025 – 3,500</div>
-        <div class="legend-item"><span style="background: #d7b5d8"></span> 3,500 – 6,000</div>
-        <div class="legend-item"><span style="background: #df65b0"></span> 6,000 – 9,000</div>
-        <div class="legend-item"><span style="background: #d22475"></span> 9,000 – 11,344</div>
-        <div class="legend-item"><span style="background: #7b0337"></span> 11,344+</div>
+        <div id="legend-title">Rat-related 311 complaints by council district</div>
+        <div class="legend-item"><span class="swatch" style="background:#f1eef6"></span><span class="legend-label">1,025
+                – 3,500</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#d7b5d8"></span><span class="legend-label">3,500
+                – 6,000</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#df65b0"></span><span class="legend-label">6,000
+                – 9,000</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#d22475"></span><span class="legend-label">9,000
+                – 11,344</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#7b0337"></span><span
+                class="legend-label">11,344+</span></div>
     </div>
     <div id="citation">
         Data: NYC Open Data — 311 Service Requests from 2010 to Present. NYC Department of Information Technology and
         Telecommunications.
-    </div>
-    <div id="address-panel">
-        <h3>Search by Address</h3>
-        <p>How many rat complaints were filed at a specific address in this council district?</p>
-        <div id="search-row">
-            <input type="text" id="address-input" placeholder="e.g. 123 Main Street" />
-            <button id="search-btn" onclick="searchAddress()">Search</button>
-        </div>
-        <div id="search-result"></div>
     </div>
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js"></script>
     <script src="script.js"></script>
