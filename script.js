@@ -13,8 +13,11 @@ const map = new mapboxgl.Map({
 });
 
 const DISTRICT_PROP = 'CounDist';
+let activeYear = 'all';
+let allPoints = null;
+let choroData = null;
 
-/* title screen */
+/* ── Title screen ───────────────────────────────────────────────── */
 function enterMap() {
     const titleScreen = document.getElementById('title-screen');
     titleScreen.classList.add('fade-out');
@@ -22,6 +25,142 @@ function enterMap() {
         titleScreen.style.display = 'none';
     }, 600);
 }
+
+/* ── Parse year from "5/10/26 1:26" format ─────────────────────── */
+function parseYear(dateStr) {
+    if (!dateStr) return null;
+    try {
+        const datePart = String(dateStr).trim().split(' ')[0];  // "5/10/26"
+        const parts = datePart.split('/');
+        if (parts.length < 3) return null;
+        const yearShort = parseInt(parts[2], 10);
+        if (isNaN(yearShort)) return null;
+        return 2000 + yearShort;
+    } catch {
+        return null;
+    }
+}
+
+/* ── Count complaints per district for a given year ─────────────── */
+function countByDistrict(year) {
+    const counts = {};
+    if (!allPoints) return counts;
+
+    allPoints.features.forEach(f => {
+        const props = f.properties;
+        const district = String(props['Council District']);  // gives "16"
+        const featureYear = parseYear(props['Created Date']);
+
+        if (featureYear === null) return;
+        if (year !== 'all' && featureYear !== parseInt(year, 10)) return;
+
+        counts[district] = (counts[district] || 0) + 1;
+    });
+
+    return counts;
+}
+
+/* ── Get min/max across all districts for current filter ─────────── */
+function getRange(year) {
+    const counts = Object.values(countByDistrict(year));
+    if (counts.length === 0) return { min: 0, max: 1 };
+    return {
+        min: Math.min(...counts),
+        max: Math.max(...counts)
+    };
+}
+
+/* ── Build updated GeoJSON with FILTERED_COUNT injected ─────────── */
+function buildFilteredGeoJSON(year) {
+    const counts = countByDistrict(year);
+
+    return {
+        type: 'FeatureCollection',
+        features: choroData.features.map(f => {
+            const key = String(f.properties['CounDist']);   // gives "42"
+            const filteredCount = counts[key] || 0;
+            return {
+                ...f,
+                properties: {
+                    ...f.properties,
+                    FILTERED_COUNT: filteredCount
+                }
+            };
+        })
+    };
+}
+
+/* ── Build color expression using FILTERED_COUNT ────────────────── */
+function buildColorExpression(year) {
+    const { min, max } = getRange(year);
+    const mid1 = Math.round(min + (max - min) * 0.25);
+    const mid2 = Math.round(min + (max - min) * 0.5);
+    const mid3 = Math.round(min + (max - min) * 0.75);
+
+    return [
+        'interpolate', ['linear'], ['get', 'FILTERED_COUNT'],
+        min, '#f1eef6',
+        mid1, '#d7b5d8',
+        mid2, '#df65b0',
+        mid3, '#d22475',
+        max, '#7b0337'
+    ];
+}
+
+/* ── Update choropleth and legend for selected year ─────────────── */
+function updateYear(year) {
+    if (!allPoints || !choroData) return;
+    activeYear = year;
+
+    // Set color expression first
+    map.setPaintProperty('council-districts-fill', 'fill-color', buildColorExpression(year));
+
+    // Then update the source data
+    const filtered = buildFilteredGeoJSON(year);
+    map.getSource('rat-complaints-per-cd').setData(filtered);
+
+    const { min, max } = getRange(year);
+    const mid1 = Math.round(min + (max - min) * 0.25);
+    const mid2 = Math.round(min + (max - min) * 0.5);
+    const mid3 = Math.round(min + (max - min) * 0.75);
+    const labels = [
+        `${min.toLocaleString()} – ${mid1.toLocaleString()}`,
+        `${mid1.toLocaleString()} – ${mid2.toLocaleString()}`,
+        `${mid2.toLocaleString()} – ${mid3.toLocaleString()}`,
+        `${mid3.toLocaleString()} – ${max.toLocaleString()}`,
+        `${max.toLocaleString()}+`
+    ];
+    document.querySelectorAll('.legend-label').forEach((el, i) => {
+        el.textContent = labels[i];
+    });
+
+    document.querySelectorAll('.year-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.year === year);
+    });
+
+    const yearLabel = year === 'all' ? '2020–present' : year;
+    document.getElementById('legend-title').textContent =
+        `Rat-related 311 complaints by council district — ${yearLabel}`;
+}
+
+/* ── Load both data files then initialize choropleth ────────────── */
+Promise.all([
+    fetch('./total-311-requests.json').then(r => r.json()),
+    fetch('./rat-complaints-per-cd.json').then(r => r.json())
+]).then(([points, choro]) => {
+    allPoints = points;
+    choroData = choro;
+    if (map.isStyleLoaded()) {
+        updateYear('all');
+    } else {
+        map.once('load', () => updateYear('all'));
+    }
+});
+
+/* ── Wire up year filter buttons ────────────────────────────────── */
+document.querySelectorAll('.year-btn').forEach(btn => {
+    btn.addEventListener('click', () => updateYear(btn.dataset.year));
+});
 
 map.on('load', () => {
 
@@ -72,7 +211,7 @@ map.on('load', () => {
         source: 'point-of-complaints',
         filter: ['has', 'point_count'],
         layout: {
-            'visibility': 'none',        
+            'visibility': 'none',
             'text-field': '{point_count_abbreviated}',
             'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
             'text-size': 12
@@ -88,7 +227,7 @@ map.on('load', () => {
         type: 'circle',
         source: 'point-of-complaints',
         filter: ['!', ['has', 'point_count']],
-        layout: { 'visibility': 'none' },  // fixed: was missing comma after this line
+        layout: { 'visibility': 'none' },
         paint: {
             'circle-radius': 5,
             'circle-color': '#7b0337',
@@ -154,7 +293,7 @@ map.on('load', () => {
         filter: ['==', ['get', DISTRICT_PROP], '']
     });
 
-    /* ── Hover: choropleth district popup + highlight ───────────── */
+    /* ── Hover: district popup + highlight ──────────────────────── */
     const popup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: false
@@ -163,35 +302,56 @@ map.on('load', () => {
     let hoveredId = null;
     let hoveringPoint = false;
 
-    map.on('mousemove', 'council-districts-fill', (e) => {
-        if (hoveringPoint) return;
-        if (map.getZoom() > 13) {
-            popup.remove();
-            return;
-        }
+map.on('mousemove', 'council-districts-fill', (e) => {
+    if (hoveringPoint) return;
+    if (map.getZoom() > 13) {
+        popup.remove();
+        return;
+    }
 
-        const props = e.features[0].properties;
-        const currentId = props[DISTRICT_PROP];
+    const props = e.features[0].properties;
+    const currentId = props[DISTRICT_PROP];
+    const yearLabel = activeYear === 'all' ? '2020–present' : activeYear;
 
-        popup
-            .setLngLat(e.lngLat)
-            .setHTML(`
+    let count = 0;
+    if (allPoints) {
+        const counts = countByDistrict(activeYear);
+        const key = String(props[DISTRICT_PROP]);    // "42" to match countByDistrict keys
+        count = counts[key] || 0;
+    }
+
+    popup
+        .setLngLat(e.lngLat)
+        .setHTML(`
             <strong>Council District ${props[DISTRICT_PROP]}</strong><br>
-            Number of Rat Sighting 311 Complaints: ${props.NUMPOINTS.toLocaleString()}
+            ${yearLabel} rat sighting complaints: ${count.toLocaleString()}
         `)
-            .addTo(map);
+        .addTo(map);
 
-        if (currentId !== hoveredId) {
-            hoveredId = currentId;
-            map.setFilter('council-districts-hover', ['==', ['get', DISTRICT_PROP], hoveredId]);
-            map.setFilter('council-districts-hover-line', ['==', ['get', DISTRICT_PROP], hoveredId]);
-        }
-    });
+    if (currentId !== hoveredId) {
+        hoveredId = currentId;
+        map.setFilter('council-districts-hover', ['==', ['get', DISTRICT_PROP], hoveredId]);
+        map.setFilter('council-districts-hover-line', ['==', ['get', DISTRICT_PROP], hoveredId]);
+    }
+});
 
     map.on('zoom', () => {
         if (map.getZoom() > 13) {
             popup.remove();
             hoveredId = null;
+        }
+
+        /* hide points and restore year filter when zoomed back out */
+        if (map.getZoom() < 11) {
+            map.setLayoutProperty('clusters', 'visibility', 'none');
+            map.setLayoutProperty('cluster-count', 'visibility', 'none');
+            map.setLayoutProperty('unclustered-points', 'visibility', 'none');
+
+            const yf = document.getElementById('year-filter');
+            yf.style.opacity = '1';
+            yf.style.pointerEvents = 'auto';
+
+            document.getElementById('zoom-note').style.display = 'none';
         }
     });
 
@@ -231,6 +391,13 @@ map.on('load', () => {
             map.setLayoutProperty('clusters', 'visibility', 'visible');
             map.setLayoutProperty('cluster-count', 'visibility', 'visible');
             map.setLayoutProperty('unclustered-points', 'visibility', 'visible');
+
+            /* dim year filter — it only applies to choropleth view */
+            const yf = document.getElementById('year-filter');
+            yf.style.opacity = '0.3';
+            yf.style.pointerEvents = 'none';
+
+            document.getElementById('zoom-note').style.display = 'block';
         });
     });
 
@@ -258,11 +425,12 @@ map.on('load', () => {
 
     map.on('mouseenter', 'unclustered-points', (e) => {
         hoveringPoint = true;
-        popup.remove();  // immediately dismiss any open district popup
+        popup.remove();
         map.getCanvas().style.cursor = 'pointer';
 
         const props = e.features[0].properties;
         const coords = e.features[0].geometry.coordinates.slice();
+        const year = parseYear(props['Created Date']);
 
         while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
             coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
@@ -272,7 +440,8 @@ map.on('load', () => {
             .setLngLat(coords)
             .setHTML(`
                 <strong>${props['Incident Address'] || 'Address unavailable'}</strong><br>
-                <span style="opacity:0.75">${props['Problem Detail (formerly Descriptor)'] || props['Complaint Type'] || 'No description'}</span>
+                <span style="opacity:0.75">${props['Problem Detail (formerly Descriptor)'] || props['Complaint Type'] || 'No description'}</span><br>
+                <span style="opacity:0.5; font-size:11px">Filed: ${year || 'Date unavailable'}</span>
             `)
             .addTo(map);
     });
