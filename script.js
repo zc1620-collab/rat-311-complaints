@@ -145,7 +145,7 @@ function updateYear(year) {
 
 /* ── Load both data files then initialize choropleth ────────────── */
 Promise.all([
-    fetch('./total-311-requests.json').then(r => r.json()),
+    fetch('./311-total-complaints.json').then(r => r.json()),
     fetch('./rat-complaints-per-cd.json').then(r => r.json())
 ]).then(([points, choro]) => {
     allPoints = points;
@@ -172,7 +172,7 @@ map.on('load', () => {
 
     map.addSource('point-of-complaints', {
         type: 'geojson',
-        data: './total-311-requests.json',
+        data: './311-total-complaints.json',
         cluster: true,
         clusterMaxZoom: 16,
         clusterRadius: 40
