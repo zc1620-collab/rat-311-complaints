@@ -18,6 +18,8 @@ let allPoints = null;
 let choroData = null;
 let currentView = 'choropleth';  // 'choropleth' or 'clusters'
 let isAllYearsMode = true;
+let addressIndex = {};
+let uniqueAddresses = [];
 
 /* ── All-years scale ───────────────────────────── */
 const ALL_COLOR_STOPS = [
@@ -177,6 +179,7 @@ function setView(view) {
         document.getElementById('year-filter').style.opacity = '1';
         document.getElementById('year-filter').style.pointerEvents = 'auto';
         document.getElementById('zoom-note').style.display = 'none';
+        document.getElementById('address-search').style.display = 'none';
 
         btn.textContent = 'Switch to point view';
         map.easeTo({ zoom: 10, center: [-74.006, 40.7128], duration: 800 });
@@ -194,6 +197,7 @@ function setView(view) {
         document.getElementById('year-filter').style.opacity = '0.3';
         document.getElementById('year-filter').style.pointerEvents = 'none';
         document.getElementById('zoom-note').style.display = 'block';
+        document.getElementById('address-search').style.display = 'block';
 
         btn.textContent = 'Switch to district view';
     }
@@ -254,6 +258,98 @@ document.getElementById('year-slider')
         updateYear(year);
     });
 
+const addressInput = document.getElementById('address-input');
+const autocompleteResults = document.getElementById('autocomplete-results');
+const searchStatus = document.getElementById('search-status');
+
+addressInput.addEventListener('input', () => {
+
+    const value = addressInput.value.trim().toLowerCase();
+
+    autocompleteResults.innerHTML = '';
+    searchStatus.textContent = '';
+
+    if (value.length < 2) return;
+
+    const matches = uniqueAddresses
+        .filter(addr =>
+            addr.toLowerCase().includes(value)
+        )
+        .slice(0, 8);
+
+    if (matches.length === 0) {
+
+        searchStatus.innerHTML =
+            'No matching address found in dataset.';
+
+        return;
+    }
+
+    matches.forEach(address => {
+
+        const div = document.createElement('div');
+
+        div.className = 'autocomplete-item';
+
+        div.textContent = address;
+
+        div.addEventListener('click', () => {
+
+            addressInput.value = address;
+
+            autocompleteResults.innerHTML = '';
+
+            runAddressSearch(address);
+        });
+
+        autocompleteResults.appendChild(div);
+    });
+});
+
+function runAddressSearch(address) {
+
+    const normalized = address.toLowerCase();
+
+    const matches = addressIndex[normalized];
+
+    if (!matches) {
+
+        searchStatus.innerHTML =
+            'Address not found in complaint dataset.';
+
+        return;
+    }
+
+    if (matches.length === 0) {
+
+        searchStatus.innerHTML =
+            'Address exists but has zero complaints.';
+
+        return;
+    }
+
+    searchStatus.innerHTML =
+        `<strong>${matches.length}</strong> complaint(s) found.`;
+
+    const first = matches[0];
+
+    const coords = first.geometry.coordinates;
+
+    map.easeTo({
+        center: coords,
+        zoom: 17,
+        duration: 1200
+    });
+
+    new mapboxgl.Popup()
+        .setLngLat(coords)
+        .setHTML(`
+            <strong>${address}</strong><br>
+            ${matches.length} rat-related complaint(s)
+        `)
+        .addTo(map);
+}
+
 /* ── Wire up view toggle ────────────────────────────────────────── */
 document.getElementById('view-toggle').addEventListener('click', () => {
     setView(currentView === 'choropleth' ? 'clusters' : 'choropleth');
@@ -265,6 +361,23 @@ Promise.all([
     fetch('./rat-complaints-per-cd.json').then(r => r.json())
 ]).then(([points, choro]) => {
     allPoints = points;
+    points.features.forEach(feature => {
+
+        const props = feature.properties;
+
+        if (!props['Incident Address']) return;
+
+        const raw = String(props['Incident Address']).trim();
+
+        const normalized = raw.toLowerCase();
+
+        if (!addressIndex[normalized]) {
+            addressIndex[normalized] = [];
+            uniqueAddresses.push(raw);
+        }
+
+        addressIndex[normalized].push(feature);
+    });
     choroData = choro;
     updateLegendLabels('all');
     if (map.isStyleLoaded()) {
