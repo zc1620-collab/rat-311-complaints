@@ -7,7 +7,7 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 
-/*styling the title screen */
+/* title screen */
 #title-screen {
     position: absolute;
     top: 0;
@@ -89,7 +89,7 @@ body {
     transform: scale(0.97);
 }
 
-/*map position*/
+/* map */
 #map {
     position: absolute;
     top: 0;
@@ -99,38 +99,7 @@ body {
     z-index: 1;
 }
 
-/* instructions at top of page*/
-#instruction-overlay {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.72);
-    color: white;
-    padding: 12px 24px;
-    border-radius: 8px;
-    text-align: center;
-    z-index: 10;
-    pointer-events: none;
-    transition: opacity 0.5s ease;
-}
-
-#instruction-overlay p {
-    margin: 0 0 4px;
-    font-size: 15px;
-    font-weight: 500;
-}
-
-#instruction-overlay span {
-    font-size: 12px;
-    opacity: 0.7;
-}
-
-#instruction-overlay.hidden {
-    opacity: 0;
-    pointer-events: none;
-}
-
+/* popups */
 .mapboxgl-popup-content {
     background: rgba(0, 0, 0, 0.75);
     color: white;
@@ -145,7 +114,142 @@ body {
     display: none;
 }
 
-/* map legend */
+#mode-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+/* toggle between buttons */
+.mode-btn {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.85);
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 10px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.mode-btn:hover {
+    background: rgba(255,255,255,0.18);
+}
+
+.active-mode {
+    background: white !important;
+    color: black !important;
+}
+
+#year-slider-wrapper {
+    display: none;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+}
+
+#slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(255,255,255,0.6);
+}
+
+/* year slider */
+#year-filter {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.72);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 300px;
+    transition: opacity 0.3s ease;
+}
+
+#slider-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.year-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+#slider-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: white;
+}
+
+#year-slider {
+    width: 100%;
+    accent-color: white;
+    cursor: pointer;
+}
+
+#slider-ticks {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 2px;
+}
+/*all years button */
+#all-years-btn {
+    background: rgba(255,255,255,0.12);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.2);
+    padding: 12px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-bottom: 10px;
+    transition: background 0.2s ease;
+}
+
+#all-years-btn:hover {
+    background: rgba(255,255,255,0.2);
+}
+
+.active-view-btn {
+    background: white !important;
+    color: black !important;
+}
+
+/* view toggle button */
+#view-toggle {
+    position: absolute;
+    top: 20px;
+    right: 10px;
+    background: white;
+    color: black;
+    border: none;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s ease;
+}
+
+#view-toggle:hover {
+    background: #e0e0e0;
+}
+
+/* legend */
 #legend {
     position: absolute;
     bottom: 30px;
@@ -192,6 +296,23 @@ body {
     white-space: nowrap;
 }
 
+/* zoom note */
+#zoom-note {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.72);
+    color: rgba(255, 255, 255, 0.8);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 12px;
+    z-index: 10;
+    display: none;
+    pointer-events: none;
+    white-space: nowrap;
+}
+
 /* citation */
 #citation {
     position: absolute;
@@ -208,72 +329,4 @@ body {
 #citation a {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: underline;
-}
-
-/* year filter */
-#year-filter {
-    position: absolute;
-    top: 20px;
-    right: 10px;
-    background: rgba(0, 0, 0, 0.72);
-    color: white;
-    padding: 12px 14px;
-    border-radius: 8px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    transition: opacity 0.3s ease;
-}
-
-.year-label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.5);
-}
-
-#year-buttons {
-    display: flex;
-    gap: 6px;
-}
-
-.year-btn {
-    background: transparent;
-    color: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(255, 255, 255, 0.25);
-    padding: 5px 10px;
-    border-radius: 4px;
-    font-size: 12px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.year-btn:hover {
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.year-btn.active {
-    background: white;
-    color: black;
-    border-color: white;
-    font-weight: 600;
-}
-
-/* zoom note */
-#zoom-note {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.72);
-    color: rgba(255, 255, 255, 0.8);
-    padding: 8px 16px;
-    border-radius: 6px;
-    font-size: 12px;
-    z-index: 10;
-    display: none;
-    pointer-events: none;
-    white-space: nowrap;
 }

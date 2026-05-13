@@ -25,32 +25,67 @@
             <button id="enter-btn" onclick="enterMap()">Explore the Map →</button>
         </div>
     </div>
+
     <div id="map"></div>
+
     <div id="year-filter">
-        <span class="year-label">Filter by year</span>
-        <div id="year-buttons">
-            <button class="year-btn active" data-year="all">All</button>
-            <button class="year-btn" data-year="2020">2020</button>
-            <button class="year-btn" data-year="2021">2021</button>
-            <button class="year-btn" data-year="2022">2022</button>
-            <button class="year-btn" data-year="2023">2023</button>
-            <button class="year-btn" data-year="2024">2024</button>
-            <button class="year-btn" data-year="2025">2025</button>
-            <button class="year-btn" data-year="2026">2026</button>
+
+        <div id="mode-buttons">
+            <button id="all-years-btn" class="mode-btn active-mode">
+                All Years
+            </button>
+
+            <button id="yearly-btn" class="mode-btn">
+                Year-by-Year
+            </button>
         </div>
+
+        <div id="year-slider-wrapper">
+
+            <div id="slider-row">
+                <span class="year-label">Selected Year</span>
+                <span id="slider-label">2020</span>
+            </div>
+
+            <input type="range" id="year-slider" min="0" max="6" step="1" value="0" />
+
+            <div id="slider-ticks">
+                <span>2020</span>
+                <span>2021</span>
+                <span>2022</span>
+                <span>2023</span>
+                <span>2024</span>
+                <span>2025</span>
+                <span>2026</span>
+            </div>
+
+        </div>
+
     </div>
-    <div id="zoom-note">Showing all complaints — zoom out to filter by year</div>
+
+    <button id="view-toggle">Switch to point view</button>
+
+    <div id="zoom-note">Showing all complaints — switch to district view to filter by year</div>
+
     <div id="legend">
         <div id="legend-title">Rat-related 311 complaints by council district — 2020–present</div>
-        <div class="legend-item"><span class="swatch" style="background:#f1eef6"></span><span class="legend-label">–</span></div>
-        <div class="legend-item"><span class="swatch" style="background:#d7b5d8"></span><span class="legend-label">–</span></div>
-        <div class="legend-item"><span class="swatch" style="background:#df65b0"></span><span class="legend-label">–</span></div>
-        <div class="legend-item"><span class="swatch" style="background:#d22475"></span><span class="legend-label">–</span></div>
-        <div class="legend-item"><span class="swatch" style="background:#7b0337"></span><span class="legend-label">–</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#f1eef6"></span><span
+                class="legend-label">–</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#d7b5d8"></span><span
+                class="legend-label">–</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#df65b0"></span><span
+                class="legend-label">–</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#d22475"></span><span
+                class="legend-label">–</span></div>
+        <div class="legend-item"><span class="swatch" style="background:#7b0337"></span><span
+                class="legend-label">–</span></div>
     </div>
+
     <div id="citation">
-        Data: NYC Open Data — 311 Service Requests from 2010 to Present. NYC Department of Information Technology and Telecommunications.
+        Data: NYC Open Data — 311 Service Requests from 2010 to Present. NYC Department of Information Technology and
+        Telecommunications.
     </div>
+
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.20.0/mapbox-gl.js"></script>
     <script src="script.js"></script>
 </body>
