@@ -16,40 +16,38 @@ const DISTRICT_PROP = 'CounDist';
 let activeYear = 'all';
 let allPoints = null;
 let choroData = null;
-let currentView = 'choropleth';  // 'choropleth' or 'clusters'
-let isAllYearsMode = true;
+let currentView = 'choropleth';
 let addressIndex = {};
 let uniqueAddresses = [];
 
-/* ── All-years scale ───────────────────────────── */
+/* ── Color scales ───────────────────────────────────────────────── */
 const ALL_COLOR_STOPS = [
-    [0, '#f1eef6'],
-    [3000, '#d7b5d8'],
-    [6000, '#df65b0'],
-    [9000, '#d22475'],
+    [0,     '#f1eef6'],
+    [3000,  '#d7b5d8'],
+    [6000,  '#df65b0'],
+    [9000,  '#d22475'],
     [11344, '#7b0337']
 ];
 
-/* ── Standardized yearly scale ────────────────── */
-/* Same scale used for every single year */
 const YEAR_COLOR_STOPS = [
-    [0, '#f1eef6'],
-    [500, '#d7b5d8'],
+    [0,    '#f1eef6'],
+    [500,  '#d7b5d8'],
     [1000, '#df65b0'],
     [1500, '#d22475'],
     [2000, '#7b0337']
 ];
 
+const HOME_CENTER = [-74.006, 40.7128];
+const HOME_ZOOM   = 10;
+
 /* ── Title screen ───────────────────────────────────────────────── */
 function enterMap() {
     const titleScreen = document.getElementById('title-screen');
     titleScreen.classList.add('fade-out');
-    setTimeout(() => {
-        titleScreen.style.display = 'none';
-    }, 600);
+    setTimeout(() => { titleScreen.style.display = 'none'; }, 600);
 }
 
-/* ── Parse year from "5/10/26 1:26" format ─────────────────────── */
+/* ── Parse year from "5/10/26 1:26" ────────────────────────────── */
 function parseYear(dateStr) {
     if (!dateStr) return null;
     try {
@@ -59,61 +57,44 @@ function parseYear(dateStr) {
         const yearShort = parseInt(parts[2], 10);
         if (isNaN(yearShort)) return null;
         return 2000 + yearShort;
-    } catch {
-        return null;
-    }
+    } catch { return null; }
 }
 
-/* ── Count complaints per district for a given year ─────────────── */
+/* ── Count complaints per district ──────────────────────────────── */
 function countByDistrict(year) {
     const counts = {};
     if (!allPoints) return counts;
-
     allPoints.features.forEach(f => {
         const props = f.properties;
         const district = String(props['Council District']);
         const featureYear = parseYear(props['Created Date']);
-
         if (featureYear === null) return;
         if (year !== 'all' && featureYear !== parseInt(year, 10)) return;
-
         counts[district] = (counts[district] || 0) + 1;
     });
-
     return counts;
 }
 
-/* ── Build updated GeoJSON with FILTERED_COUNT injected ─────────── */
+/* ── Build filtered GeoJSON ─────────────────────────────────────── */
 function buildFilteredGeoJSON(year) {
     const counts = countByDistrict(year);
-
     return {
         type: 'FeatureCollection',
-        features: choroData.features.map(f => {
-            const key = String(f.properties[DISTRICT_PROP]);
-            return {
-                ...f,
-                properties: {
-                    ...f.properties,
-                    FILTERED_COUNT: counts[key] || 0
-                }
-            };
-        })
+        features: choroData.features.map(f => ({
+            ...f,
+            properties: {
+                ...f.properties,
+                FILTERED_COUNT: counts[String(f.properties[DISTRICT_PROP])] || 0
+            }
+        }))
     };
 }
 
-/* ── Fixed color expression using global scale ──────────────────── */
-function buildColorExpression(mode = 'all') {
-
-    const stops = mode === 'all'
-        ? ALL_COLOR_STOPS
-        : YEAR_COLOR_STOPS;
-
+/* ── Color expression ───────────────────────────────────────────── */
+function buildColorExpression(year = 'all') {
+    const stops = year === 'all' ? ALL_COLOR_STOPS : YEAR_COLOR_STOPS;
     return [
-        'interpolate',
-        ['linear'],
-        ['get', 'FILTERED_COUNT'],
-
+        'interpolate', ['linear'], ['get', 'FILTERED_COUNT'],
         stops[0][0], stops[0][1],
         stops[1][0], stops[1][1],
         stops[2][0], stops[2][1],
@@ -122,13 +103,9 @@ function buildColorExpression(mode = 'all') {
     ];
 }
 
-/* ── Update legend labels to always show fixed global scale ─────── */
+/* ── Legend labels ──────────────────────────────────────────────── */
 function updateLegendLabels(year = 'all') {
-
-    const stops = year === 'all'
-        ? ALL_COLOR_STOPS
-        : YEAR_COLOR_STOPS;
-
+    const stops = year === 'all' ? ALL_COLOR_STOPS : YEAR_COLOR_STOPS;
     const labels = [
         `${stops[0][0].toLocaleString()} – ${stops[1][0].toLocaleString()}`,
         `${stops[1][0].toLocaleString()} – ${stops[2][0].toLocaleString()}`,
@@ -136,246 +113,166 @@ function updateLegendLabels(year = 'all') {
         `${stops[3][0].toLocaleString()} – ${stops[4][0].toLocaleString()}`,
         `${stops[4][0].toLocaleString()}+`
     ];
-
     document.querySelectorAll('.legend-label').forEach((el, i) => {
         el.textContent = labels[i];
     });
 }
 
-/* ── Update choropleth for selected year ────────────────────────── */
+/* ── Update choropleth ──────────────────────────────────────────── */
 function updateYear(year) {
     if (!allPoints || !choroData) return;
     activeYear = year;
     updateLegendLabels(year);
-
     const filtered = buildFilteredGeoJSON(year);
     map.getSource('rat-complaints-per-cd').setData(filtered);
     map.setPaintProperty('council-districts-fill', 'fill-color', buildColorExpression(year));
-
-    const yearLabel = year === 'all'
-        ? 'All Years (2020–2026)'
-        : year;
+    const yearLabel = year === 'all' ? 'All Years (2020–2026)' : year;
     document.getElementById('legend-title').textContent =
         `Rat-related 311 complaints by council district — ${yearLabel}`;
     document.getElementById('slider-label').textContent =
         year === 'all' ? 'All years' : year;
 }
 
-/* ── Toggle between choropleth and cluster views ────────────────── */
+/* ── Home button ────────────────────────────────────────────────── */
+document.getElementById('home-btn').addEventListener('click', () => {
+    map.easeTo({ center: HOME_CENTER, zoom: HOME_ZOOM, duration: 800 });
+});
+
+/* ── Citation visibility on zoom ────────────────────────────────── */
+function updateCitationVisibility() {
+    const citation = document.getElementById('citation');
+    citation.style.display = map.getZoom() <= 10.5 ? 'block' : 'none';
+}
+
+/* ── Toggle choropleth / cluster view ───────────────────────────── */
 function setView(view) {
     currentView = view;
     const btn = document.getElementById('view-toggle');
 
     if (view === 'choropleth') {
         map.setLayoutProperty('council-districts-fill', 'visibility', 'visible');
-        map.setLayoutProperty('council-districts', 'visibility', 'visible');
-        map.setLayoutProperty('council-districts-hover', 'visibility', 'visible');
+        map.setLayoutProperty('council-districts',      'visibility', 'visible');
+        map.setLayoutProperty('council-districts-hover','visibility', 'visible');
         map.setLayoutProperty('council-districts-hover-line', 'visibility', 'visible');
-        map.setLayoutProperty('clusters', 'visibility', 'none');
-        map.setLayoutProperty('cluster-count', 'visibility', 'none');
+        map.setLayoutProperty('clusters',           'visibility', 'none');
+        map.setLayoutProperty('cluster-count',      'visibility', 'none');
         map.setLayoutProperty('unclustered-points', 'visibility', 'none');
 
-        document.getElementById('legend').style.display = 'block';
-        document.getElementById('year-filter').style.opacity = '1';
+        document.getElementById('legend').style.display        = 'block';
+        document.getElementById('year-filter').style.opacity   = '1';
         document.getElementById('year-filter').style.pointerEvents = 'auto';
-        document.getElementById('zoom-note').style.display = 'none';
+        document.getElementById('zoom-note').style.display     = 'none';
         document.getElementById('address-search').style.display = 'none';
 
-        btn.textContent = 'Switch to point view';
-        map.easeTo({ zoom: 10, center: [-74.006, 40.7128], duration: 800 });
+        btn.textContent = 'Click to View All Individual Complaints';
+        map.easeTo({ center: HOME_CENTER, zoom: HOME_ZOOM, duration: 800 });
 
     } else {
         map.setLayoutProperty('council-districts-fill', 'visibility', 'none');
-        map.setLayoutProperty('council-districts', 'visibility', 'none');
-        map.setLayoutProperty('council-districts-hover', 'visibility', 'none');
+        map.setLayoutProperty('council-districts',      'visibility', 'none');
+        map.setLayoutProperty('council-districts-hover','visibility', 'none');
         map.setLayoutProperty('council-districts-hover-line', 'visibility', 'none');
-        map.setLayoutProperty('clusters', 'visibility', 'visible');
-        map.setLayoutProperty('cluster-count', 'visibility', 'visible');
+        map.setLayoutProperty('clusters',           'visibility', 'visible');
+        map.setLayoutProperty('cluster-count',      'visibility', 'visible');
         map.setLayoutProperty('unclustered-points', 'visibility', 'visible');
 
-        document.getElementById('legend').style.display = 'none';
-        document.getElementById('year-filter').style.opacity = '0.3';
+        document.getElementById('legend').style.display        = 'none';
+        document.getElementById('year-filter').style.opacity   = '0.3';
         document.getElementById('year-filter').style.pointerEvents = 'none';
-        document.getElementById('zoom-note').style.display = 'block';
+        document.getElementById('zoom-note').style.display     = 'block';
         document.getElementById('address-search').style.display = 'block';
 
-        btn.textContent = 'Switch to district view';
+        btn.textContent = 'Switch to District View';
     }
 }
 
-/* ── Wire up slider ─────────────────────────────────────────────── */
-const sliderYears = [
-    '2020',
-    '2021',
-    '2022',
-    '2023',
-    '2024',
-    '2025',
-    '2026'
-];
+/* ── Slider: All Years vs Year-by-Year ──────────────────────────── */
+const sliderYears = ['2020','2021','2022','2023','2024','2025','2026'];
 
-/* default = all years */
-updateYear('all');
+document.getElementById('all-years-btn').addEventListener('click', () => {
+    document.getElementById('all-years-btn').classList.add('active-mode');
+    document.getElementById('yearly-btn').classList.remove('active-mode');
+    document.getElementById('year-slider-wrapper').style.display = 'none';
+    updateYear('all');
+});
 
-document.getElementById('all-years-btn')
-    .addEventListener('click', () => {
+document.getElementById('yearly-btn').addEventListener('click', () => {
+    document.getElementById('yearly-btn').classList.add('active-mode');
+    document.getElementById('all-years-btn').classList.remove('active-mode');
+    document.getElementById('year-slider-wrapper').style.display = 'flex';
+    const slider = document.getElementById('year-slider');
+    updateYear(sliderYears[parseInt(slider.value)]);
+});
 
-        document.getElementById('all-years-btn')
-            .classList.add('active-mode');
+document.getElementById('year-slider').addEventListener('input', function () {
+    updateYear(sliderYears[parseInt(this.value)]);
+});
 
-        document.getElementById('yearly-btn')
-            .classList.remove('active-mode');
-
-        document.getElementById('year-slider-wrapper')
-            .style.display = 'none';
-
-        updateYear('all');
-    });
-
-document.getElementById('yearly-btn')
-    .addEventListener('click', () => {
-
-        document.getElementById('yearly-btn')
-            .classList.add('active-mode');
-
-        document.getElementById('all-years-btn')
-            .classList.remove('active-mode');
-
-        document.getElementById('year-slider-wrapper')
-            .style.display = 'flex';
-
-        const slider = document.getElementById('year-slider');
-        const year = sliderYears[parseInt(slider.value)];
-
-        updateYear(year);
-    });
-
-document.getElementById('year-slider')
-    .addEventListener('input', function () {
-
-        const year = sliderYears[parseInt(this.value)];
-
-        updateYear(year);
-    });
-
-const addressInput = document.getElementById('address-input');
+/* ── Address search ─────────────────────────────────────────────── */
+const addressInput       = document.getElementById('address-input');
 const autocompleteResults = document.getElementById('autocomplete-results');
-const searchStatus = document.getElementById('search-status');
+const searchStatus       = document.getElementById('search-status');
 
 addressInput.addEventListener('input', () => {
-
     const value = addressInput.value.trim().toLowerCase();
-
     autocompleteResults.innerHTML = '';
     searchStatus.textContent = '';
-
     if (value.length < 2) return;
-
     const matches = uniqueAddresses
-        .filter(addr =>
-            addr.toLowerCase().includes(value)
-        )
+        .filter(addr => addr.toLowerCase().includes(value))
         .slice(0, 8);
-
     if (matches.length === 0) {
-
-        searchStatus.innerHTML =
-            'No matching address found in dataset.';
-
+        searchStatus.innerHTML = 'No matching address found in dataset.';
         return;
     }
-
     matches.forEach(address => {
-
         const div = document.createElement('div');
-
         div.className = 'autocomplete-item';
-
         div.textContent = address;
-
         div.addEventListener('click', () => {
-
             addressInput.value = address;
-
             autocompleteResults.innerHTML = '';
-
             runAddressSearch(address);
         });
-
         autocompleteResults.appendChild(div);
     });
 });
 
 function runAddressSearch(address) {
-
     const normalized = address.toLowerCase();
-
     const matches = addressIndex[normalized];
-
-    if (!matches) {
-
-        searchStatus.innerHTML =
-            'Address not found in complaint dataset.';
-
+    if (!matches || matches.length === 0) {
+        searchStatus.innerHTML = 'Address not found in complaint dataset.';
         return;
     }
-
-    if (matches.length === 0) {
-
-        searchStatus.innerHTML =
-            'Address exists but has zero complaints.';
-
-        return;
-    }
-
-    searchStatus.innerHTML =
-        `<strong>${matches.length}</strong> complaint(s) found.`;
-
-    const first = matches[0];
-
-    const coords = first.geometry.coordinates;
-
-    map.easeTo({
-        center: coords,
-        zoom: 17,
-        duration: 1200
-    });
-
+    searchStatus.innerHTML = `<strong>${matches.length}</strong> complaint(s) found.`;
+    map.easeTo({ center: matches[0].geometry.coordinates, zoom: 17, duration: 1200 });
     new mapboxgl.Popup()
-        .setLngLat(coords)
-        .setHTML(`
-            <strong>${address}</strong><br>
-            ${matches.length} rat-related complaint(s)
-        `)
+        .setLngLat(matches[0].geometry.coordinates)
+        .setHTML(`<strong>${address}</strong><br>${matches.length} rat-related complaint(s)`)
         .addTo(map);
 }
 
-/* ── Wire up view toggle ────────────────────────────────────────── */
+/* ── View toggle button ─────────────────────────────────────────── */
 document.getElementById('view-toggle').addEventListener('click', () => {
     setView(currentView === 'choropleth' ? 'clusters' : 'choropleth');
 });
 
-/* ── Load both data files then initialize ───────────────────────── */
+/* ── Load data ──────────────────────────────────────────────────── */
 Promise.all([
     fetch('./311-total-complaints.json').then(r => r.json()),
     fetch('./rat-complaints-per-cd.json').then(r => r.json())
 ]).then(([points, choro]) => {
     allPoints = points;
     points.features.forEach(feature => {
-
         const props = feature.properties;
-
         if (!props['Incident Address']) return;
-
-        const raw = String(props['Incident Address']).trim();
-
+        const raw        = String(props['Incident Address']).trim();
         const normalized = raw.toLowerCase();
-
         if (!addressIndex[normalized]) {
             addressIndex[normalized] = [];
             uniqueAddresses.push(raw);
         }
-
         addressIndex[normalized].push(feature);
     });
     choroData = choro;
@@ -387,9 +284,9 @@ Promise.all([
     }
 });
 
+/* ── Map load ───────────────────────────────────────────────────── */
 map.on('load', () => {
 
-    /* ── Sources ────────────────────────────────────────────────── */
     map.addSource('rat-complaints-per-cd', {
         type: 'geojson',
         data: './rat-complaints-per-cd.json'
@@ -403,7 +300,7 @@ map.on('load', () => {
         clusterRadius: 40
     });
 
-    /* ── Cluster circles ────────────────────────────────────────── */
+    /* ── Clusters — sized by point_count ────────────────────────── */
     map.addLayer({
         id: 'clusters',
         type: 'circle',
@@ -411,17 +308,22 @@ map.on('load', () => {
         filter: ['has', 'point_count'],
         layout: { 'visibility': 'none' },
         paint: {
+            /* color: light → dark as count grows */
             'circle-color': [
                 'step', ['get', 'point_count'],
                 '#d7b5d8',
-                20, '#df65b0',
-                100, '#7b0337'
+                50,  '#df65b0',
+                200, '#d22475',
+                500, '#7b0337'
             ],
+            /* radius: proportional to count so small ≠ large visually */
             'circle-radius': [
-                'step', ['get', 'point_count'],
-                14,
-                20, 20,
-                100, 28
+                'interpolate', ['linear'], ['get', 'point_count'],
+                1,    8,
+                50,   18,
+                200,  28,
+                1000, 40,
+                2000, 52
             ],
             'circle-opacity': 0.85,
             'circle-stroke-width': 1.5,
@@ -429,7 +331,6 @@ map.on('load', () => {
         }
     });
 
-    /* ── Cluster count labels ───────────────────────────────────── */
     map.addLayer({
         id: 'cluster-count',
         type: 'symbol',
@@ -444,7 +345,6 @@ map.on('load', () => {
         paint: { 'text-color': '#ffffff' }
     });
 
-    /* ── Individual unclustered points ─────────────────────────── */
     map.addLayer({
         id: 'unclustered-points',
         type: 'circle',
@@ -460,7 +360,6 @@ map.on('load', () => {
         }
     });
 
-    /* ── Choropleth fill ────────────────────────────────────────── */
     map.addLayer({
         id: 'council-districts-fill',
         type: 'fill',
@@ -471,7 +370,6 @@ map.on('load', () => {
         }
     });
 
-    /* ── District outlines ──────────────────────────────────────── */
     map.addLayer({
         id: 'council-districts',
         type: 'line',
@@ -484,16 +382,12 @@ map.on('load', () => {
         }
     });
 
-    /* ── Hover highlight layers ─────────────────────────────────── */
     map.addLayer({
         id: 'council-districts-hover',
         type: 'fill',
         source: 'rat-complaints-per-cd',
         maxzoom: 13,
-        paint: {
-            'fill-color': '#ffffff',
-            'fill-opacity': 0.2
-        },
+        paint: { 'fill-color': '#ffffff', 'fill-opacity': 0.2 },
         filter: ['==', ['get', DISTRICT_PROP], '']
     });
 
@@ -502,67 +396,65 @@ map.on('load', () => {
         type: 'line',
         source: 'rat-complaints-per-cd',
         maxzoom: 13,
-        paint: {
-            'line-color': '#ffffff',
-            'line-width': 2.5
-        },
+        paint: { 'line-color': '#ffffff', 'line-width': 2.5 },
         filter: ['==', ['get', DISTRICT_PROP], '']
     });
 
-    /* ── Hover: district popup + highlight ──────────────────────── */
+    /* ── Popups ─────────────────────────────────────────────────── */
     const popup = new mapboxgl.Popup({
         closeButton: false,
-        closeOnClick: false
+        closeOnClick: false,
+        offset: [0, -8]   // push popup up so cursor doesn't overlap it
     });
 
-    let hoveredId = null;
+    let hoveredId    = null;
     let hoveringPoint = false;
 
     map.on('mousemove', 'council-districts-fill', (e) => {
         if (hoveringPoint) return;
-        if (map.getZoom() > 13) {
-            popup.remove();
-            return;
-        }
+        if (map.getZoom() > 13) { popup.remove(); return; }
 
-        const props = e.features[0].properties;
+        const props     = e.features[0].properties;
         const currentId = props[DISTRICT_PROP];
         const yearLabel = activeYear === 'all' ? '2020–present' : activeYear;
 
         let count = 0;
         if (allPoints) {
             const counts = countByDistrict(activeYear);
-            const key = String(props[DISTRICT_PROP]);
-            count = counts[key] || 0;
+            count = counts[String(props[DISTRICT_PROP])] || 0;
         }
 
         popup
             .setLngLat(e.lngLat)
             .setHTML(`
                 <strong>Council District ${props[DISTRICT_PROP]}</strong><br>
-                ${yearLabel} rat sighting complaints: ${count.toLocaleString()}
+                <span class="popup-year">${yearLabel}</span><br>
+                <span class="popup-count">${count.toLocaleString()}</span>
+                <span class="popup-unit"> rat sighting complaints</span>
             `)
             .addTo(map);
 
         if (currentId !== hoveredId) {
             hoveredId = currentId;
-            map.setFilter('council-districts-hover', ['==', ['get', DISTRICT_PROP], hoveredId]);
-            map.setFilter('council-districts-hover-line', ['==', ['get', DISTRICT_PROP], hoveredId]);
+            map.setFilter('council-districts-hover',
+                ['==', ['get', DISTRICT_PROP], hoveredId]);
+            map.setFilter('council-districts-hover-line',
+                ['==', ['get', DISTRICT_PROP], hoveredId]);
         }
     });
 
     map.on('zoom', () => {
-        if (map.getZoom() > 13) {
-            popup.remove();
-            hoveredId = null;
-        }
+        updateCitationVisibility();
+        if (map.getZoom() > 13) { popup.remove(); hoveredId = null; }
     });
 
     map.on('mouseleave', 'council-districts-fill', () => {
         popup.remove();
         hoveredId = null;
-        map.setFilter('council-districts-hover', ['==', ['get', DISTRICT_PROP], '']);
-        map.setFilter('council-districts-hover-line', ['==', ['get', DISTRICT_PROP], '']);
+        map.setFilter('council-districts-hover',
+            ['==', ['get', DISTRICT_PROP], '']);
+        map.setFilter('council-districts-hover-line',
+            ['==', ['get', DISTRICT_PROP], '']);
         map.getCanvas().style.cursor = '';
     });
 
@@ -570,48 +462,48 @@ map.on('load', () => {
         map.getCanvas().style.cursor = 'pointer';
     });
 
-    /* ── Click district: zoom in (choropleth view only) ─────────── */
+    /* ── Click district: zoom in ────────────────────────────────── */
     map.on('click', 'council-districts-fill', (e) => {
         if (currentView !== 'choropleth') return;
-        const clusterFeatures = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+        const clusterFeatures = map.queryRenderedFeatures(e.point,
+            { layers: ['clusters'] });
         if (clusterFeatures.length > 0) return;
 
         const coordinates = e.features[0].geometry.coordinates;
-        const bounds = coordinates.flat(Infinity)
-            .reduce((b, coord, i) => {
-                if (i % 2 === 0) {
-                    b[0][0] = Math.min(b[0][0], coord);
-                    b[1][0] = Math.max(b[1][0], coord);
-                } else {
-                    b[0][1] = Math.min(b[0][1], coord);
-                    b[1][1] = Math.max(b[1][1], coord);
-                }
-                return b;
-            }, [[Infinity, Infinity], [-Infinity, -Infinity]]);
+        const bounds = coordinates.flat(Infinity).reduce((b, coord, i) => {
+            if (i % 2 === 0) {
+                b[0][0] = Math.min(b[0][0], coord);
+                b[1][0] = Math.max(b[1][0], coord);
+            } else {
+                b[0][1] = Math.min(b[0][1], coord);
+                b[1][1] = Math.max(b[1][1], coord);
+            }
+            return b;
+        }, [[Infinity, Infinity], [-Infinity, -Infinity]]);
 
         map.fitBounds(bounds, { padding: 60, duration: 1000 });
     });
 
-    /* ── Click cluster: zoom into it ───────────────────────────── */
+    /* ── Click cluster: expand ──────────────────────────────────── */
     map.on('click', 'clusters', (e) => {
-        const features = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
+        const features  = map.queryRenderedFeatures(e.point, { layers: ['clusters'] });
         const clusterId = features[0].properties.cluster_id;
-
-        map.getSource('point-of-complaints').getClusterExpansionZoom(clusterId, (err, zoom) => {
-            if (err) return;
-            map.easeTo({
-                center: features[0].geometry.coordinates,
-                zoom: zoom + 1,
-                duration: 800
+        map.getSource('point-of-complaints')
+            .getClusterExpansionZoom(clusterId, (err, zoom) => {
+                if (err) return;
+                map.easeTo({
+                    center: features[0].geometry.coordinates,
+                    zoom: zoom + 1,
+                    duration: 800
+                });
             });
-        });
     });
 
     /* ── Hover individual points ────────────────────────────────── */
     const pointPopup = new mapboxgl.Popup({
         closeButton: false,
         closeOnClick: false,
-        offset: 10
+        offset: 12
     });
 
     map.on('mouseenter', 'unclustered-points', (e) => {
@@ -619,9 +511,9 @@ map.on('load', () => {
         popup.remove();
         map.getCanvas().style.cursor = 'pointer';
 
-        const props = e.features[0].properties;
+        const props  = e.features[0].properties;
         const coords = e.features[0].geometry.coordinates.slice();
-        const year = parseYear(props['Created Date']);
+        const year   = parseYear(props['Created Date']);
 
         while (Math.abs(e.lngLat.lng - coords[0]) > 180) {
             coords[0] += e.lngLat.lng > coords[0] ? 360 : -360;
@@ -649,5 +541,8 @@ map.on('load', () => {
     map.on('mouseleave', 'clusters', () => {
         map.getCanvas().style.cursor = '';
     });
+
+    /* initial citation state */
+    updateCitationVisibility();
 
 });  /* end map.on('load') */

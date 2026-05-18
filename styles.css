@@ -1,5 +1,4 @@
-html,
-body {
+html, body {
     height: 100%;
     margin: 0;
     padding: 0;
@@ -7,13 +6,11 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
 }
 
-/* title screen */
+/* ── Title screen ───────────────────────────────────────────────── */
 #title-screen {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     background: rgba(10, 10, 20, 0.85);
     backdrop-filter: blur(4px);
     z-index: 100;
@@ -23,9 +20,7 @@ body {
     transition: opacity 0.6s ease;
 }
 
-#title-screen.fade-out {
-    opacity: 0;
-}
+#title-screen.fade-out { opacity: 0; }
 
 #title-card {
     max-width: 560px;
@@ -38,7 +33,7 @@ body {
     font-size: 13px;
     letter-spacing: 0.15em;
     text-transform: uppercase;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255,255,255,0.5);
     margin: 0 0 12px;
 }
 
@@ -53,7 +48,7 @@ body {
 #description {
     font-size: 16px;
     line-height: 1.7;
-    color: rgba(255, 255, 255, 0.75);
+    color: rgba(255,255,255,0.75);
     margin: 0 0 32px;
 }
 
@@ -62,7 +57,7 @@ body {
     justify-content: center;
     gap: 24px;
     font-size: 11px;
-    color: rgba(255, 255, 255, 0.35);
+    color: rgba(255,255,255,0.35);
     text-transform: uppercase;
     letter-spacing: 0.1em;
     margin-bottom: 40px;
@@ -81,37 +76,88 @@ body {
     transition: background 0.2s ease, transform 0.1s ease;
 }
 
-#enter-btn:hover {
-    background: #e0e0e0;
-}
+#enter-btn:hover  { background: #e0e0e0; }
+#enter-btn:active { transform: scale(0.97); }
 
-#enter-btn:active {
-    transform: scale(0.97);
-}
-
-/* map */
+/* ── Map ────────────────────────────────────────────────────────── */
 #map {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
     z-index: 1;
 }
 
-/* popups */
+/* ── Map title (top-left) ───────────────────────────────────────── */
+#map-title {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    z-index: 10;
+    color: white;
+    pointer-events: none;
+}
+
+#map-title-main {
+    font-size: 18px;
+    font-weight: 700;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+    letter-spacing: -0.01em;
+}
+
+#map-title-sub {
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 3px;
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
+}
+
+/* ── Popups ─────────────────────────────────────────────────────── */
 .mapboxgl-popup-content {
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0,0,0,0.78);
     color: white;
     padding: 10px 14px;
     border-radius: 6px;
     font-size: 13px;
     line-height: 1.6;
     box-shadow: none;
+    pointer-events: none;   /* prevents popup from intercepting mouse */
 }
 
-.mapboxgl-popup-tip {
-    display: none;
+.mapboxgl-popup-tip { display: none; }
+
+/* bigger bolder count number inside popup */
+.popup-count {
+    font-size: 22px;
+    font-weight: 700;
+    color: white;
+}
+
+.popup-unit {
+    font-size: 12px;
+    color: rgba(255,255,255,0.65);
+}
+
+.popup-year {
+    font-size: 11px;
+    color: rgba(255,255,255,0.5);
+}
+
+/* ── Year filter (top-center) ───────────────────────────────────── */
+#year-filter {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.72);
+    color: white;
+    padding: 12px 18px;
+    border-radius: 8px;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-width: 300px;
+    transition: opacity 0.3s ease;
 }
 
 #mode-buttons {
@@ -119,7 +165,6 @@ body {
     gap: 8px;
 }
 
-/* toggle between buttons */
 .mode-btn {
     flex: 1;
     background: rgba(255,255,255,0.1);
@@ -133,9 +178,7 @@ body {
     transition: all 0.2s ease;
 }
 
-.mode-btn:hover {
-    background: rgba(255,255,255,0.18);
-}
+.mode-btn:hover { background: rgba(255,255,255,0.18); }
 
 .active-mode {
     background: white !important;
@@ -146,32 +189,7 @@ body {
     display: none;
     flex-direction: column;
     gap: 6px;
-    margin-top: 12px;
-}
-
-#slider-ticks {
-    display: flex;
-    justify-content: space-between;
-    font-size: 10px;
-    color: rgba(255,255,255,0.6);
-}
-
-/* year slider */
-#year-filter {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.72);
-    color: white;
-    padding: 12px 18px;
-    border-radius: 8px;
-    z-index: 10;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    min-width: 300px;
-    transition: opacity 0.3s ease;
+    margin-top: 4px;
 }
 
 #slider-row {
@@ -184,7 +202,7 @@ body {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.08em;
-    color: rgba(255, 255, 255, 0.5);
+    color: rgba(255,255,255,0.5);
 }
 
 #slider-label {
@@ -203,32 +221,11 @@ body {
     display: flex;
     justify-content: space-between;
     font-size: 10px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255,255,255,0.5);
     margin-top: 2px;
 }
-/*all years button */
-#all-years-btn {
-    background: rgba(255,255,255,0.12);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.2);
-    padding: 12px 18px;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 12px;
-    margin-bottom: 10px;
-    transition: background 0.2s ease;
-}
 
-#all-years-btn:hover {
-    background: rgba(255,255,255,0.2);
-}
-
-.active-view-btn {
-    background: white !important;
-    color: black !important;
-}
-
-/* view toggle button */
+/* ── View toggle (top-right) ────────────────────────────────────── */
 #view-toggle {
     position: absolute;
     top: 20px;
@@ -245,14 +242,31 @@ body {
     transition: background 0.2s ease;
 }
 
-#view-toggle:hover {
-    background: #e0e0e0;
+#view-toggle:hover { background: #e0e0e0; }
+
+/* ── Home button ────────────────────────────────────────────────── */
+#home-btn {
+    position: absolute;
+    top: 62px;
+    right: 10px;
+    background: rgba(0,0,0,0.72);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 8px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    z-index: 10;
+    transition: background 0.2s ease;
 }
 
-/*address search button */
+#home-btn:hover { background: rgba(255,255,255,0.15); }
+
+/* ── Address search ─────────────────────────────────────────────── */
 #address-search {
     position: absolute;
-    top: 72px;
+    top: 104px;
     right: 10px;
     width: 300px;
     background: rgba(0,0,0,0.78);
@@ -283,9 +297,7 @@ body {
     font-size: 13px;
 }
 
-#address-input::placeholder {
-    color: rgba(255,255,255,0.45);
-}
+#address-input::placeholder { color: rgba(255,255,255,0.45); }
 
 #autocomplete-results {
     margin-top: 8px;
@@ -301,9 +313,7 @@ body {
     transition: background 0.15s ease;
 }
 
-.autocomplete-item:hover {
-    background: rgba(255,255,255,0.12);
-}
+.autocomplete-item:hover { background: rgba(255,255,255,0.12); }
 
 #search-status {
     margin-top: 10px;
@@ -312,12 +322,12 @@ body {
     color: rgba(255,255,255,0.75);
 }
 
-/* legend */
+/* ── Legend ─────────────────────────────────────────────────────── */
 #legend {
     position: absolute;
-    bottom: 30px;
+    bottom: 50px;
     right: 10px;
-    background: rgba(0, 0, 0, 0.72);
+    background: rgba(0,0,0,0.72);
     color: white;
     padding: 14px 16px;
     border-radius: 8px;
@@ -329,10 +339,10 @@ body {
 #legend-title {
     font-size: 12px;
     font-weight: 600;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255,255,255,0.85);
     margin-bottom: 10px;
     padding-bottom: 8px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
     max-width: 180px;
     line-height: 1.4;
 }
@@ -350,23 +360,23 @@ body {
     border-radius: 3px;
     display: inline-block;
     flex-shrink: 0;
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    border: 1px solid rgba(255,255,255,0.15);
 }
 
 .legend-label {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.8);
+    color: rgba(255,255,255,0.8);
     white-space: nowrap;
 }
 
-/* zoom note */
+/* ── Zoom note ──────────────────────────────────────────────────── */
 #zoom-note {
     position: absolute;
     bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.72);
-    color: rgba(255, 255, 255, 0.8);
+    background: rgba(0,0,0,0.72);
+    color: rgba(255,255,255,0.8);
     padding: 8px 16px;
     border-radius: 6px;
     font-size: 12px;
@@ -376,20 +386,22 @@ body {
     white-space: nowrap;
 }
 
-/* citation */
+/* ── Citation (zoom-dependent, bottom-left) ─────────────────────── */
 #citation {
     position: absolute;
-    bottom: 30px;
+    bottom: 10px;
     left: 10px;
-    background: rgba(0, 0, 0, 0.72);
-    color: rgba(255, 255, 255, 0.8);
-    padding: 8px 12px;
+    background: rgba(0,0,0,0.62);
+    color: rgba(255,255,255,0.7);
+    padding: 6px 10px;
     border-radius: 6px;
-    font-size: 11px;
+    font-size: 10px;
     z-index: 10;
+    max-width: 340px;
+    line-height: 1.4;
 }
 
 #citation a {
-    color: rgba(255, 255, 255, 0.9);
+    color: rgba(255,255,255,0.85);
     text-decoration: underline;
 }
